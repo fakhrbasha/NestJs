@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule, RequestMethod } from "@nestjs/common";
 import { UserController } from "./user.controller";
 import { UserService } from "./user.service";
 import { UserModel } from "src/DB/models/user.model";
@@ -8,6 +8,7 @@ import RedisService from "src/common/services/redis.service";
 import { RedisModule } from "src/common/redis/redis.module";
 import TokenService from "src/common/utils/jwt/jwt.service";
 import { JwtService } from "@nestjs/jwt";
+import { Authentication } from "src/common/middleware/authentication.middleware";
 
 
 @Module({

@@ -84,5 +84,4 @@ UserSchema.pre('save', function () {
 export type UserDocument = HydratedDocument<User>
 
 export const UserModel = MongooseModule.forFeature([{ name: User.name, schema: UserSchema }])
-
 // and in module use this mode import it

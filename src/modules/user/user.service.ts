@@ -64,6 +64,7 @@ export class UserService {
             throw new BadRequestException("Invalid email or password");
         }
         const uuid = randomUUID()
+
         const access_token = await this.tokenService.generateToken({
             payload: { id: user._id, email: user.email },
             // secretKey: user?.role == RoleEnum.user ? process.env.ACCESS_SECRET_KEY_USER : process.env.ACCESS_SECRET_KEY_ADMIN,

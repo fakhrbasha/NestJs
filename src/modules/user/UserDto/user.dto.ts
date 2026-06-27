@@ -2,33 +2,8 @@ import { Allow, IsEmail, IsInt, IsNotEmpty, IsString, IsStrongPassword, Length, 
 import * as z from 'zod';
 
 import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
+import { IsMatch } from 'src/common/decorator/user.decorator';
 
-@ValidatorConstraint({ name: 'matchKey', async: false })
-export class matchKey implements ValidatorConstraintInterface {
-    validate(value: string, args: ValidationArguments) {
-        // console.log({ value, args })
-        return args.value === args.object[args.constraints[0]]
-    }
-
-    defaultMessage(args: ValidationArguments) {
-        // here you can provide default error message if validation failed
-        return `${args.property} not match with ${args.constraints[0]}`;
-    }
-}
-
-// custom decorator
-
-export function IsMatch(constraints: string[], validationOptions?: ValidationOptions) {
-    return function (object: Object, propertyName: string) {
-        registerDecorator({
-            target: object.constructor,
-            propertyName: propertyName,
-            options: validationOptions,
-            constraints,
-            validator: matchKey,
-        });
-    };
-}
 export class CreateUserDto {
 
 
