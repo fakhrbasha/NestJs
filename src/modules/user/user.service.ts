@@ -10,6 +10,7 @@ import { templateEmail } from "src/common/utils/mail/email.template";
 import RedisService from "src/common/services/redis.service";
 import { randomUUID } from "crypto";
 import TokenService from "src/common/utils/jwt/jwt.service";
+import { S3Service } from "src/common/services/s3.service";
 
 
 
@@ -20,7 +21,8 @@ export class UserService {
     constructor(
         private readonly userRepository: UserRepository,
         private readonly redisService: RedisService,
-        private readonly tokenService: TokenService
+        private readonly tokenService: TokenService,
+        private readonly s3Service: S3Service
 
 
     ) {
@@ -83,5 +85,12 @@ export class UserService {
 
         return { access_token, refresh_token }
 
+    }
+
+    async uploadProfileImage(file: Express.Multer.File) {
+        return this.s3Service.uploadFile({
+            file: file,
+            path: "users"
+        })
     }
 }

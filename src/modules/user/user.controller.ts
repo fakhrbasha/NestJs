@@ -1,4 +1,4 @@
-import { Body, Controller, Get, ParseIntPipe, Post, Req, SetMetadata, UseGuards, UsePipes, ValidationPipe } from "@nestjs/common";
+import { Body, Controller, Get, ParseIntPipe, Post, Req, SetMetadata, UploadedFile, UploadedFiles, UseGuards, UseInterceptors, UsePipes, ValidationPipe } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { ZodValidationPipe } from "src/common/pipes/user.pipe";
 // import { CreateUserDto } from "./UserDto/user.dto";
@@ -12,7 +12,10 @@ import { AuthorizationGuard } from "src/common/guards/authorization.guard";
 import { RoleEnum } from "src/common/enum/user.enum";
 import { type UserDocument } from "src/DB/models/user.model";
 import { User } from "../../common/decorator/user.decorator"
-
+import { Multer } from "multer"
+import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from "@nestjs/platform-express";
+import multerCloud from "src/common/utils/multer.utils";
+import { Store_Enum } from "src/common/enum/multer.enum";
 
 
 
@@ -45,7 +48,7 @@ export class UserController {
     @Get()
     // @SetMetadata("tokenType", TokenEnum.access_token)
     // @TokenType(TokenEnum.refresh_token)
-    @Auth({ token_type: TokenEnum.access_token, access_roles: [RoleEnum.user] }) // auth decorator
+    // @Auth({ token_type: TokenEnum.access_token, access_roles: [RoleEnum.user] }) // auth decorator
     getUsers(@Req() req: any) {
         // console.log(req.user, req.decoded)
         return this.userService.getUsers()
@@ -67,6 +70,31 @@ export class UserController {
     @Get("/profile")
     profile(@User() user: UserDocument) {
         return { user }
+        // return this.userService.signIn(body)
+    }
+    // @Auth({ token_type: TokenEnum.access_token, access_roles: [RoleEnum.user] }) // auth decorator
+
+    @Post("/upload")
+    @UseInterceptors(FileInterceptor("attachment", multerCloud({ store_type: Store_Enum.disk })))
+    upload(@UploadedFile() file: Express.Multer.File) {
+        return this.userService.uploadProfileImage(file)
+        // return this.userService.signIn(body)
+    }
+    // more than file
+    @Post("/upload-files")
+    @UseInterceptors(FilesInterceptor("attachments", 2, multerCloud({ store_type: Store_Enum.disk })))
+    uploadFiles(@UploadedFiles() files: Express.Multer.File[]) {
+        return files
+        // return this.userService.signIn(body)
+    }
+    // Multiple files
+    @Post("/multiple-upload-files")
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'avatar', maxCount: 2 },
+        { name: 'background', maxCount: 1 },
+    ], multerCloud({ store_type: Store_Enum.disk })))
+    uploadFilesNamed(@UploadedFiles() files: { avatar: Express.Multer.File[], background: Express.Multer.File[] }) {
+        return files
         // return this.userService.signIn(body)
     }
 }

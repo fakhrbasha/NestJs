@@ -9,12 +9,13 @@ import { RedisModule } from "src/common/redis/redis.module";
 import TokenService from "src/common/utils/jwt/jwt.service";
 import { JwtService } from "@nestjs/jwt";
 import { Authentication } from "src/common/middleware/authentication.middleware";
+import { S3Service } from "src/common/services/s3.service";
 
 
 @Module({
     imports: [UserModel, RedisModule],
     controllers: [UserController],
-    providers: [UserService, UserRepository, RedisService, TokenService, JwtService
+    providers: [UserService, UserRepository, RedisService, TokenService, JwtService, S3Service
 
     ],
     exports: []
