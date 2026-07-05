@@ -1,8 +1,9 @@
-import { Allow, IsEmail, IsInt, IsNotEmpty, IsString, IsStrongPassword, Length, registerDecorator, Validate, ValidateIf, ValidationOptions } from 'class-validator';
+import { Allow, IsEmail, IsEnum, IsInt, IsNotEmpty, IsString, IsStrongPassword, Length, registerDecorator, Validate, ValidateIf, ValidationOptions } from 'class-validator';
 import * as z from 'zod';
 
 import { ValidatorConstraint, ValidatorConstraintInterface, ValidationArguments } from 'class-validator';
 import { IsMatch } from 'src/common/decorator/user.decorator';
+import { RoleEnum } from 'src/common/enum/user.enum';
 
 export class CreateUserDto {
 
@@ -29,6 +30,9 @@ export class CreateUserDto {
     @IsNotEmpty()
     @IsStrongPassword()
     password: string;
+
+    @IsEnum(RoleEnum)
+    role: RoleEnum;
 
     @Allow() // this decorator to allow from error decorator in validationPipe
     // make custom validation to refine pass 

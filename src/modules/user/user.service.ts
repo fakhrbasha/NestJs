@@ -33,7 +33,7 @@ export class UserService {
         return await this.userRepository.find({})
     }
     async signUp(body: CreateUserDto) {
-        const { age, cPassword, email, password, phone, userName } = body
+        const { age, cPassword, email, password, phone, userName, role } = body
         const emailExist = await this.userRepository.findOne({
             filter: { email }
         })
@@ -48,7 +48,7 @@ export class UserService {
         })
         const user = await this.userRepository.create({
             // age, email, password: Hash({ plan_text: password }), phone: encrypt(phone), userName
-            age, email, password, phone: encrypt(phone), userName
+            age, email, password, phone: encrypt(phone), userName, role
         })
         return user
     }

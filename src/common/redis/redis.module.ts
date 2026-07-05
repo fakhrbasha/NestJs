@@ -20,6 +20,7 @@ import { createClient } from "redis";
                 redis.on('error', (err) => {
                     console.log("redis connected error", err)
                 })
+                // console.log(process.env.REDIS_URL);
                 return redis
             }
         }
