@@ -1,5 +1,5 @@
 import { BadGatewayException, BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { createProductDto, QueryDto } from './product.dto';
+import { createProductDto, QueryDto, updateProductDto } from './product.dto';
 import { type UserDocument } from 'src/DB/models/user.model';
 import BrandRepository from 'src/DB/repo/brand.repo';
 import { S3Service } from 'src/common/services/s3.service';
@@ -64,6 +64,68 @@ export class ProductService {
 
     }
 
+
+    async getAllProducts(query: QueryDto) {
+        const { page, limit, search } = query
+        const products = await this.productRepo.paginate({
+            page, limit, search: search ? {
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                ]
+            } : {}
+        })
+        return products;
+    }
+    async getProductById(id: Types.ObjectId) {
+        const product = await this.productRepo.findOne({ filter: { _id: id } })
+        if (!product) {
+            throw new NotFoundException('Category not found');
+        }
+        return product;
+
+    }
+
+    async deleteProduct(id: Types.ObjectId) {
+        const product = await this.productRepo.findOne({ filter: { _id: id } })
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+        await this.s3Service.deleteFiles([product.mainImage, ...product.subImages])
+        return this.productRepo.delete(product._id)
+
+    }
+
+
+    async updateProduct(body: updateProductDto, id: Types.ObjectId, user: UserDocument) {
+
+        let { name, brandId, categoryId, description, price, stock, discount } = body;
+
+        const product = await this.productRepo.findOne({ filter: { _id: id } });
+
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+        if (await this.categoryRepo.findOne({ filter: { _id: categoryId } })) {
+            throw new NotFoundException('Some of categories not found');
+        }
+        if (await this.brandRepo.findOne({ filter: { _id: brandId } })) {
+            throw new NotFoundException('Some of brands not found');
+        }
+
+
+        price = price! - (price! * ((discount || 0) / 100))
+
+        const updateProduct = await this.productRepo.update(
+            { _id: id }, {
+            name: name ?? product.name,
+            description: description ?? product.description,
+            stock: stock ?? product.stock,
+            discount: discount ?? product.discount,
+
+        })
+
+        return updateProduct
+    }
 
 
 
