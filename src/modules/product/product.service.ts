@@ -105,26 +105,40 @@ export class ProductService {
         if (!product) {
             throw new NotFoundException('Product not found');
         }
-        if (await this.categoryRepo.findOne({ filter: { _id: categoryId } })) {
-            throw new NotFoundException('Some of categories not found');
+
+        if (categoryId) {
+            const category = await this.categoryRepo.findOne({ filter: { _id: categoryId } });
+            if (!category) {
+                throw new NotFoundException('Category not found');
+            }
         }
-        if (await this.brandRepo.findOne({ filter: { _id: brandId } })) {
-            throw new NotFoundException('Some of brands not found');
+
+        if (brandId) {
+            const brand = await this.brandRepo.findOne({ filter: { _id: brandId } });
+            if (!brand) {
+                throw new NotFoundException('Brand not found');
+            }
         }
 
+        let finalPrice = product.price;
+        if (price !== undefined) {
+            finalPrice = price - (price * ((discount ?? product.discount ?? 0) / 100));
+        }
 
-        price = price! - (price! * ((discount || 0) / 100))
+        const updatedProduct = await this.productRepo.update(
+            { _id: id },
+            {
+                name: name ?? product.name,
+                description: description ?? product.description,
+                stock: stock ?? product.stock,
+                discount: discount ?? product.discount,
+                price: finalPrice,
+                brandId: brandId ? [brandId] : product.brandId,
+                categoryId: categoryId ? [categoryId] : product.categoryId,
+            }
+        );
 
-        const updateProduct = await this.productRepo.update(
-            { _id: id }, {
-            name: name ?? product.name,
-            description: description ?? product.description,
-            stock: stock ?? product.stock,
-            discount: discount ?? product.discount,
-
-        })
-
-        return updateProduct
+        return updatedProduct;
     }
 
 
