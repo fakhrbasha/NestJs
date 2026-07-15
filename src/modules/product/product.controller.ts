@@ -49,13 +49,32 @@ export class ProductController {
         return this.ProductService.deleteProduct(params.id)
     }
     @Patch(":id")
+    @UseInterceptors(FileFieldsInterceptor([
+        { name: 'mainImage', maxCount: 1 },
+        { name: 'subImages', maxCount: 5 },
+    ], multerCloud()))
     @Auth({ access_roles: [RoleEnum.admin] })
+
     async updateProduct(
         @Body() body: updateProductDto,
         @Param() params: IdDto,
+        @UploadedFiles() files: { mainImage: Express.Multer.File[], subImages: Express.Multer.File[] },
+
         @User() user: UserDocument
     ) {
-        return this.ProductService.updateProduct(body, params.id, user)
+        return this.ProductService.updateProduct(body, params.id, files, user)
+    }
+
+
+
+    @Patch('/wishlist/:id')
+
+    @Auth({ access_roles: [RoleEnum.admin] })
+    async addToWishList(
+        @Param() params: IdDto,
+        @User() user: UserDocument
+    ) {
+        return this.ProductService.addToWishList(params.id, user)
     }
 
 

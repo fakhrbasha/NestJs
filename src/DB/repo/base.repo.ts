@@ -103,7 +103,7 @@ abstract class BaseRepository<TDocument> {
                 .skip(skip)
                 .limit(limit)
                 .populate(populate)
-                .sort(sort), ,
+                .sort(sort),
             this.model.countDocuments({ ...(search ?? {}) })
         ])
         const totalPages = Math.ceil(totalDoc! / limit)

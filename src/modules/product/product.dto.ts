@@ -2,6 +2,7 @@ import { PartialType } from "@nestjs/mapped-types";
 import { Type } from "class-transformer";
 import { IsMongoId, isMongoId, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Length, Max, Min, Validate } from "class-validator";
 import { Types } from "mongoose";
+import { AtLeastOne } from "src/common/decorator/brand.decorator";
 import { ValidateIds } from "src/common/decorator/category.decorator";
 
 
@@ -49,9 +50,17 @@ export class createProductDto {
     stock?: number;
 
 
+    @IsNotEmpty()
+    @IsString()
+    @Length(2, 50)
+    slug: string;
+
+
 
 }
-// AtLeastOne(['name', 'slogan'])
+AtLeastOne(['name', 'description', 'brandId', 'categoryId', 'price', 'discount', 'stock', 'slug'], {
+    message: 'At least one field must be provided for update',
+})
 export class updateProductDto extends PartialType(createProductDto) {
 
 }

@@ -6,6 +6,7 @@ import { S3Service } from 'src/common/services/s3.service';
 import { Types } from 'mongoose';
 import CategoryRepository from 'src/DB/repo/category.repo';
 import ProductRepository from 'src/DB/repo/product.repo';
+import UserRepository from 'src/DB/repo/user.repo';
 
 @Injectable()
 export class ProductService {
@@ -14,6 +15,7 @@ export class ProductService {
     constructor(
         private readonly brandRepo: BrandRepository,
         private readonly categoryRepo: CategoryRepository,
+        private readonly userRepo: UserRepository,
         private readonly productRepo: ProductRepository,
         private readonly s3Service: S3Service
     ) { }
@@ -21,12 +23,12 @@ export class ProductService {
 
     async createProduct(body: createProductDto, files: { mainImage: Express.Multer.File[], subImages: Express.Multer.File[] }, user: UserDocument) {
 
-        let { name, brandId, categoryId, description, price, stock, discount } = body
+        let { name, brandId, categoryId, description, price, stock, discount, slug } = body
 
-        if (await this.categoryRepo.findOne({ filter: { _id: categoryId } })) {
+        if (!(await this.categoryRepo.findOne({ filter: { _id: categoryId } }))) {
             throw new NotFoundException('Some of categories not found');
         }
-        if (await this.brandRepo.findOne({ filter: { _id: brandId } })) {
+        if (!(await this.brandRepo.findOne({ filter: { _id: brandId } }))) {
             throw new NotFoundException('Some of brands not found');
         }
 
@@ -51,6 +53,7 @@ export class ProductService {
             price,
             stock,
             discount,
+            slug,
             createdBy: user._id
         })
 
@@ -96,7 +99,7 @@ export class ProductService {
     }
 
 
-    async updateProduct(body: updateProductDto, id: Types.ObjectId, user: UserDocument) {
+    async updateProduct(body: updateProductDto, id: Types.ObjectId, files: { mainImage: Express.Multer.File[], subImages: Express.Multer.File[] }, user: UserDocument) {
 
         let { name, brandId, categoryId, description, price, stock, discount } = body;
 
@@ -125,6 +128,17 @@ export class ProductService {
             finalPrice = price - (price * ((discount ?? product.discount ?? 0) / 100));
         }
 
+        if (files.mainImage && files.mainImage.length > 0) {
+            const mainImage = await this.s3Service.uploadFile({ file: files.mainImage[0], path: "product/mainImage" });
+            await this.s3Service.deleteFiles([product.mainImage]);
+            product.mainImage = mainImage;
+        }
+        if (files.subImages && files.subImages.length > 0) {
+            const subImages = await Promise.all(files.subImages.map(file => this.s3Service.uploadFile({ file, path: "product/subImages" })));
+            await this.s3Service.deleteFiles(product.subImages);
+            product.subImages = subImages;
+        }
+
         const updatedProduct = await this.productRepo.update(
             { _id: id },
             {
@@ -139,6 +153,45 @@ export class ProductService {
         );
 
         return updatedProduct;
+    }
+
+    async addToWishList(id: Types.ObjectId, user: UserDocument) {
+
+
+        const product = await this.productRepo.findOne({ filter: { _id: id } });
+
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+        let isExist: Boolean = false
+        const productExist = await this.userRepo.findOneAndUpdate({
+            filter: {
+                _id: user._id,
+                wishList: { $in: [id] }
+            }
+            , update: {
+                $pull: {
+                    wishList: id
+                }
+            }
+        })
+        if (!productExist) {
+            await this.userRepo.findOneAndUpdate({
+                filter: {
+                    _id: user._id
+                }
+                , update: {
+                    $addToSet: {
+                        wishList: id
+                    }
+                }
+
+            })
+            isExist = true
+        }
+
+        return isExist == true ? { message: "added to wishlist" } : { message: "Removed from wishlist" }
+
     }
 
 

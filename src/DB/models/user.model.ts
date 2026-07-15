@@ -4,6 +4,7 @@ import { MongooseModule, Prop, Schema, SchemaFactory, Virtual } from "@nestjs/mo
 import mongoose, { HydratedDocument, Types } from "mongoose";
 import { GenderEnum, RoleEnum } from "src/common/enum/user.enum";
 import { Hash } from "src/common/utils/security/hash.security";
+import { Product } from "./product.model";
 
 @Schema({
     timestamps: true,
@@ -71,6 +72,12 @@ export class User {
 
     @Prop({ type: String, enum: RoleEnum, default: RoleEnum.user })
     role?: RoleEnum
+
+
+    // @Prop({ type: [{ type: Types.ObjectId, ref: Product.name }] })
+    // wishList: Types.ObjectId[]
+    @Prop({ type: [{ type: Types.ObjectId, ref: 'Product' }] })
+    wishList: Types.ObjectId[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

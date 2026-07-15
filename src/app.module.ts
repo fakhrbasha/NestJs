@@ -9,12 +9,16 @@ import { RedisModule } from './common/redis/redis.module';
 import { BrandModule } from './modules/brand/brand.module';
 import { CategoryModule } from './modules/category/category.module';
 import { ProductModule } from './modules/product/product.module';
+import { CartModule } from './modules/Cart/cart.module';
+import { CouponModule } from './modules/coupon/coupon.module';
 
 @Module({
   imports: [
     UserModule,
     BrandModule,
     CategoryModule, ProductModule,
+    CartModule,
+    CouponModule,
     ConfigModule.forRoot({
       envFilePath: [".env", ".env.development", ".env.production"],
       isGlobal: true
